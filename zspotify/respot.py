@@ -587,6 +587,9 @@ class RespotTrackHandler:
         """Downloads raw song audio from Spotify"""
         # TODO: ADD disc_number IF > 1
 
+        max_retries = 3
+        for attempt in range(max_retries):
+
         try:
             try:
                 _track_id = TrackId.from_base62(track_id)
@@ -630,11 +633,17 @@ class RespotTrackHandler:
 
             return audio_bytes
 
+            break  # If download succeeds, exit the loop
+
         except Exception as e:
-            print("###   download_track - FAILED TO DOWNLOAD   ###")
-            print(e)
-            print(track_id, filename)
-            return None
+            if attempt < max_retries - 1:
+                print("###   download_track - FAILED TO DOWNLOAD   ### -- RETRYING")
+                continue  # This will cause the loop to retry
+            else:
+                print("###   download_track - FAILED TO DOWNLOAD   ###")
+                print(e)
+                print(track_id, filename)
+                return None
 
     def convert_audio_format(self, audio_bytes: BytesIO, output_path: Path) -> None:
         """Converts raw audio (ogg vorbis) to user specified format"""
